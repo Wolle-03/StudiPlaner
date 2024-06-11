@@ -1,19 +1,25 @@
-﻿namespace StudiPlaner.Headless;
+﻿using StudiPlaner.Core;
+using StudiPlaner.Core.Data;
 
-class App
+namespace StudiPlaner.Headless;
+
+abstract class App
 {
-    private static readonly App instance = new();
-    public static App GetInstance() { return instance; }
+    public static void Main() { Start(); }
 
-    public static void Main() { GetInstance(); }
+    private static readonly Screen screen = new();
+    public static bool LoggedIn { get; private set; } = false;
+    private static Profile? Profile;
 
-    private Screen screen;
-
-    private App()
+    private static void Start()
     {
-        screen = new Screen();
-        screen.SetFrame();
-        screen.Print();
+        screen.Frame().Login().Date().Print();
         Console.ReadKey();
+    }
+
+    public static async Task<bool> Login(string name, string password)
+    {
+        Profile = await SaveFile.AsyncLoad(name, password);
+        return LoggedIn = Profile != null;
     }
 }

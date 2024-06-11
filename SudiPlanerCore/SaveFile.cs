@@ -7,12 +7,12 @@ namespace StudiPlaner.Core;
 
 public static class SaveFile
 {
-    public static void Save(string path, string file, Profile data, string password)
+    public static void Save(string path, Profile data, string password)
     {
         try
         {
             Directory.CreateDirectory(path);
-            using FileStream fileStream = new(Path.Combine(path, file), FileMode.Create);
+            using FileStream fileStream = new(Path.Combine(path, data.Name + ".profile"), FileMode.Create);
             using Aes aes = Aes.Create();
             aes.Key = SHA256.HashData(Encoding.UTF8.GetBytes(password));
             fileStream.Write(aes.IV, 0, aes.IV.Length);
@@ -28,13 +28,13 @@ public static class SaveFile
     }
 
     public static void Save(Profile data, string password) =>
-        Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), "profile", data, password);
+        Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), data, password);
 
-    public static async Task<Profile?> AsyncLoad(string path, string file, string password)
+    public static async Task<Profile?> AsyncLoad(string path, string name, string password)
     {
         try
         {
-            using FileStream fileStream = new(Path.Combine(path, file), FileMode.Open);
+            using FileStream fileStream = new(Path.Combine(path, name + ".profile"), FileMode.Open);
             using Aes aes = Aes.Create();
             byte[] iv = new byte[aes.IV.Length];
             int numBytesToRead = aes.IV.Length;
@@ -46,24 +46,23 @@ public static class SaveFile
                 numBytesRead += n;
                 numBytesToRead -= n;
             }
-
             using CryptoStream cryptoStream = new(
                fileStream,
                aes.CreateDecryptor(SHA256.HashData(Encoding.UTF8.GetBytes(password)), iv),
                CryptoStreamMode.Read);
             using StreamReader decryptReader = new(cryptoStream);
-            Profile profile = JsonSerializer.Deserialize<Profile>(await decryptReader.ReadToEndAsync());
+            string s = await decryptReader.ReadToEndAsync();
+            Profile profile = JsonSerializer.Deserialize<Profile>(s);
             Console.WriteLine($"Loading successfully");
-
             return profile;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"The decryption failed. {ex}");
+            Console.WriteLine($"The decryption failed.\n{ex}");
             return null;
         }
     }
 
-    public static Task<Profile?> AsyncLoad(string password) =>
-        AsyncLoad(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), "profile", password);
+    public static Task<Profile?> AsyncLoad(string name, string password) =>
+        AsyncLoad(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), name, password);
 }

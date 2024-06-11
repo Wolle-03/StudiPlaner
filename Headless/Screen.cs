@@ -1,45 +1,18 @@
 ﻿namespace StudiPlaner.Headless;
-class Screen(TextReader input, TextWriter output, int Width = 120, int Height = 30)
+
+public class Screen(int Width = 120, int Height = 30)
 {
-    private TextReader Input { get; set; } = input;
-    private TextWriter Output { get; set; } = output;
     private int Width { get; set; } = Width;
     private int Height { get; set; } = Height;
-    private readonly char[] buffer = Enumerable.Repeat(' ',Width*Height).ToArray();
+    private readonly Char[] buffer = Enumerable.Repeat<Char>(' ', Width * Height).ToArray();
 
-    public Screen(Stream stream, int Width = 120, int Height = 30) : this(new StreamReader(stream), new StreamWriter(stream), Width, Height)
-    {
-        if (!stream.CanRead || !stream.CanWrite) throw new Exception("Stream cannot read and write");
-    }
-    public Screen(int Width = 120, int Height = 30) : this(Console.In, Console.Out, Width, Height) { }
+    public Screen Init() { Array.Fill(buffer, ' '); return this; }
 
-    public void Init()
-    {
-        for (int i = 0; i < buffer.Length; i++)
-            buffer[i] = ' ';
-    }
-    public void Clear()
-    {
-        Init();
-        Print();
-    }
+    public void Clear() { Init().Frame().Print(); }
 
-    public void Print()
-    { 
-        for (int i = 0; i < buffer.Length; i++)
-        {
-            Output.Write(buffer[i]);
-            if ((i + 1) % Width == 0 && i + 1 != Height * Width)
-                Output.Write("\n");
-        }
-    }
-
-    public void SetFrame()
+    public Screen Frame()
     {
-        buffer[0] = '+';
-        buffer[Width - 1] = '+';
-        buffer[Width * (Height - 1)] = '+';
-        buffer[Width * Height - 1] = '+';
+        buffer[0] = buffer[Width - 1] = buffer[Width * (Height - 1)] = buffer[Width * Height - 1] = '+';
         for (int i = 1; i < Width - 1; i++)
         {
             buffer[i] = '-';
@@ -50,5 +23,62 @@ class Screen(TextReader input, TextWriter output, int Width = 120, int Height = 
             buffer[i * Width] = '|';
             buffer[(i + 1) * Width - 1] = '|';
         }
+        return this;
+    }
+
+    public void Print()
+    {
+        bool flag = !(bool)buffer[0];
+        for (int i = 0; i < buffer.Length; i++)
+        {
+            if (flag != (flag = (bool)buffer[i]))
+                Console.ForegroundColor = flag ? ConsoleColor.White : ConsoleColor.DarkGray;
+            Console.Write(buffer[i]);
+            if ((i + 1) % Width == 0 && i + 1 != Height * Width)
+                Console.Write("\n");
+        }
+    }
+
+    public Screen Date() => TextField(DateTime.Now.ToString(), 0, 0);
+
+    public Screen TextField(string text, int column, int row, bool enabled = true)
+    {
+        int width = text.Length + 1;
+        buffer[Width * row + column] = buffer[Width * row + column + width] =
+        buffer[Width * (row + 2) + column] = buffer[Width * (row + 2) + column + width] = ('+', enabled);
+        buffer[Width * (row + 1) + column] =
+         buffer[Width * (row + 1) + width + column] = ('|', enabled);
+        for (int i = 1; i <= text.Length; i++)
+        {
+                buffer[Width * (row + 1) + column + i] = (text[i - 1], enabled);
+            buffer[Width * row + column + i] = buffer[Width * (row + 2) + column + i] = ('-', enabled);
+        }
+        return this;
+    }
+
+    public Screen Button(string text, int column, int row, bool enabled = true)
+    {
+        return TextField(" O " + text, column, row, enabled);
+    }
+
+    public Screen Login()
+    {
+        string text = App.LoggedIn ? "Logout " : "Login ";
+        return Button(text, Width - text.Length - 5, 0);
+    }
+
+    readonly struct Char(char c, bool enabled = true)
+    {
+        char C { get; init; } = c;
+        bool Enabled { get; init; } = enabled;
+
+        public static implicit operator Char(char c) => new(c);
+
+        public static implicit operator Char((char c, bool b) t) => new(t.c, t.b);
+
+        public static implicit operator char(Char c) => c.C;
+        public static explicit operator bool(Char c) => c.Enabled;
+
+        public static implicit operator (char, bool)(Char c) => (c.C, c.Enabled);
     }
 }

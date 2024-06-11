@@ -1,6 +1,6 @@
 ﻿namespace StudiPlaner.Core.Data;
 
-public class TimeTable
+public class TimeTable(params RunningCourse[] courses)
 {
-    Course[] courses;
+    public RunningCourse[] Courses { get; set; } = courses;
 }
