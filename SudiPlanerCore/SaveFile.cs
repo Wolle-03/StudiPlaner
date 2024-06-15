@@ -30,8 +30,10 @@ public static class SaveFile
     public static void Save(Profile data, string password) =>
         Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), data, password);
 
-    public static async Task<Profile?> AsyncLoad(string path, string name, string password)
+    public static Profile? Load(string path, string name, string password)
     {
+        if (!File.Exists(Path.Combine(path, name + ".profile")))
+            return null;
         try
         {
             using FileStream fileStream = new(Path.Combine(path, name + ".profile"), FileMode.Open);
@@ -51,18 +53,18 @@ public static class SaveFile
                aes.CreateDecryptor(SHA256.HashData(Encoding.UTF8.GetBytes(password)), iv),
                CryptoStreamMode.Read);
             using StreamReader decryptReader = new(cryptoStream);
-            string s = await decryptReader.ReadToEndAsync();
-            Profile profile = JsonSerializer.Deserialize<Profile>(s);
+            string s = decryptReader.ReadToEnd();
+            Profile? profile = JsonSerializer.Deserialize<Profile>(s);
             Console.WriteLine($"Loading successfully");
             return profile;
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            Console.WriteLine($"The decryption failed.\n{ex}");
+            Console.WriteLine(e);
             return null;
         }
     }
 
-    public static Task<Profile?> AsyncLoad(string name, string password) =>
-        AsyncLoad(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), name, password);
+    public static Profile? Load(string name, string password) =>
+        Load(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), name, password);
 }
