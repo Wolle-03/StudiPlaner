@@ -7,12 +7,12 @@ namespace StudiPlaner.Core;
 
 public static class SaveFile
 {
-    public static void Save(string path, Profile data, string password)
+    public static void Save<T>(T data, string name, string password)
     {
         try
         {
-            Directory.CreateDirectory(path);
-            using FileStream fileStream = new(Path.Combine(path, data.Name + ".profile"), FileMode.Create);
+            Directory.CreateDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"));
+            using FileStream fileStream = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner", name + ".profile"), FileMode.Create);
             using Aes aes = Aes.Create();
             aes.Key = SHA256.HashData(Encoding.UTF8.GetBytes(password));
             fileStream.Write(aes.IV, 0, aes.IV.Length);
@@ -27,16 +27,13 @@ public static class SaveFile
         }
     }
 
-    public static void Save(Profile data, string password) =>
-        Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), data, password);
-
-    public static Profile? Load(string path, string name, string password)
+    public static T? Load<T>(string name, string password)
     {
-        if (!File.Exists(Path.Combine(path, name + ".profile")))
-            return null;
+        if (!File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner", name + ".profile")))
+            return default;
         try
         {
-            using FileStream fileStream = new(Path.Combine(path, name + ".profile"), FileMode.Open);
+            using FileStream fileStream = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner", name + ".profile"), FileMode.Open);
             using Aes aes = Aes.Create();
             byte[] iv = new byte[aes.IV.Length];
             int numBytesToRead = aes.IV.Length;
@@ -54,17 +51,13 @@ public static class SaveFile
                CryptoStreamMode.Read);
             using StreamReader decryptReader = new(cryptoStream);
             string s = decryptReader.ReadToEnd();
-            Profile? profile = JsonSerializer.Deserialize<Profile>(s);
+            T? data = JsonSerializer.Deserialize<T>(s);
             Console.WriteLine($"Loading successfully");
-            return profile;
+            return data;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine(e);
-            return null;
+            return default;
         }
     }
-
-    public static Profile? Load(string name, string password) =>
-        Load(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudiPlaner"), name, password);
 }

@@ -1,4 +1,4 @@
-﻿using static System.Reflection.Metadata.BlobBuilder;
+﻿using Core.Data;
 
 namespace StudiPlaner.Core.Data;
 
@@ -14,6 +14,16 @@ public class TimeTable(List<RunningCourse> courses)
         return counter;
     }
 
+    public void Add(RunningCourse course)
+    {
+        foreach (RunningCourse c in Courses)
+            foreach (TimeSlot t in c.TimeSlots)
+                foreach (TimeSlot t2 in course.TimeSlots)
+                    if (t.Equals(t2))
+                        throw new TimeSlotBlockedException(t2);
+        courses.Add(course);
+    }
+
     public void Remove(int index)
     {
         int counter = 0;
@@ -27,6 +37,7 @@ public class TimeTable(List<RunningCourse> courses)
                     return;
                 }
     }
+
     public FinishedCourse Finish(int index,double grade)
     {
         FinishedCourse res = Courses[index].Finish(grade);

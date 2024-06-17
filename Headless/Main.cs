@@ -1,4 +1,5 @@
-﻿using StudiPlaner.Core;
+﻿using Core.Data;
+using StudiPlaner.Core;
 using StudiPlaner.Core.Data;
 using System;
 using System.ComponentModel.Design;
@@ -44,7 +45,7 @@ abstract class App
                     if (password == Console.ReadLine())
                     {
                         LoggedIn = true;
-                        SaveFile.Save(Profile = new Profile(username), password);
+                        SaveFile.Save(Profile = new Profile(username), username, password);
                         Console.WriteLine($"Successfully logged in as {username}");
                     }
                     else
@@ -183,8 +184,17 @@ abstract class App
                         timeSlots.Add(new((Day)day, (Time)time));
                         Console.Write("\nAnother Timeslot (y/N): ");
                     } while (Console.ReadKey().Key == ConsoleKey.Y);
-                    Profile!.TimeTable.Courses.Add(new(name, semester, timeSlots));
-                    Save();
+                    try
+                    {
+                        Profile!.TimeTable.Add(new(name, semester, timeSlots));
+                        Save();
+                    }
+                    catch (TimeSlotBlockedException e)
+                    {
+                        Console.Clear();
+                        Console.WriteLine($"{e}\n\nPlease press a key...");
+                        Console.ReadKey();
+                    }
                     break;
                 case ConsoleKey.D:
                     Console.WriteLine(Profile!.TimeTable);
@@ -256,12 +266,12 @@ abstract class App
 
     static bool Login(string name, string password)
     {
-        Profile = SaveFile.Load(name, password);
+        Profile = SaveFile.Load<Profile>(name, password);
         return LoggedIn = Profile != null;
     }
 
     static void Save()
     {
-        SaveFile.Save(Profile!, password!);
+        SaveFile.Save(Profile!, username!, password!);
     }
 }

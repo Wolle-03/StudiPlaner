@@ -9,6 +9,8 @@ public class Profile(string name)
 
     public string Grades()
     {
+        if (FinishedCourses.Count == 0)
+            return "";
         List<string> res = [];
         FinishedCourses.Sort((x, y) => x.Name.CompareTo(y.Name));
         FinishedCourses.Sort((x, y) => x.Semester.CompareTo(y.Semester));

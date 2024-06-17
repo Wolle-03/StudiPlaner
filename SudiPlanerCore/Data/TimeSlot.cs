@@ -5,11 +5,9 @@ public struct TimeSlot(Day Day, Time Time) : IComparable<TimeSlot>
     public Day Day { get; set; } = Day;
     public Time Time { get; set; } = Time;
 
-    public int CompareTo(TimeSlot other)
-    {
-        return Day.CompareTo(other.Day) * 10 + Time.CompareTo(other.Time);
-    }
+    public int CompareTo(TimeSlot other) => Day.CompareTo(other.Day) * 10 + Time.CompareTo(other.Time);
 
+    public static explicit operator string(TimeSlot t) => $"{t.Day} {t.Time.ToString()[1..].Replace('_', ':'),5}";
 }
 
 public enum Day { Mon = 1, Tue, Wed, Thu, Fri, Sat, Sun }
