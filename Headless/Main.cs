@@ -1,10 +1,6 @@
 ﻿using Core.Data;
 using StudiPlaner.Core;
 using StudiPlaner.Core.Data;
-using System;
-using System.ComponentModel.Design;
-using System.IO;
-using System.Xml.Linq;
 
 namespace StudiPlaner.Headless;
 
@@ -12,14 +8,12 @@ abstract class App
 {
     public static void Main() { Start(); }
 
-    private static readonly Screen screen = new();
     public static bool LoggedIn { get; private set; } = false;
     private static Profile? Profile;
     private static string? username, password;
 
     private static void Start()
     {
-        // screen.Frame().LoginOutButton().Date().TextField(" Please log in ",-1,-1,false).Print();
         do
         {
             Console.WriteLine("\nPlease log in:");
@@ -212,7 +206,7 @@ abstract class App
                     Console.Write("Please enter grade: ");
                     while (!double.TryParse(Console.ReadLine(), out grade)) ;
                     if (index >= 0 && index < Profile!.TimeTable.Count())
-                        Profile!.FinishedCourses.Add(Profile!.TimeTable.Finish(index, grade));
+                        Profile!.Grades.FinishedCourses.Add(Profile!.TimeTable.Finish(index, grade));
                     Save();
                     break;
             }
@@ -229,7 +223,7 @@ abstract class App
             Console.WriteLine("N - New Grade");
             Console.WriteLine("D - Delete Grade");
             Console.WriteLine("E - Exit\n");
-            Console.WriteLine(Profile!.Grades());
+            Console.WriteLine(Profile!.Grades.ToString());
             key = Console.ReadKey().Key;
             Console.Clear();
             switch (key)
@@ -248,16 +242,16 @@ abstract class App
                     do
                         Console.Write("Please enter grade: ");
                     while (!double.TryParse(Console.ReadLine(), out grade));
-                    Profile!.FinishedCourses.Add(new(name, semester, grade));
+                    Profile!.Grades.FinishedCourses.Add(new(name, semester, grade));
                     Save();
                     break;
                 case ConsoleKey.D:
                     int index;
-                    Console.WriteLine(Profile!.GradesIDs());
+                    Console.WriteLine(Profile!.Grades.ToStringByIDs());
                     Console.Write("\nPlease enter ID (-1 to cancel): ");
                     while (!int.TryParse(Console.ReadLine(), out index)) ;
-                    if (index >= 0 && index < Profile!.FinishedCourses.Count)
-                        Profile!.FinishedCourses.RemoveAt(index);
+                    if (index >= 0 && index < Profile!.Grades.FinishedCourses.Count)
+                        Profile!.Grades.FinishedCourses.RemoveAt(index);
                     Save();
                     break;
             }

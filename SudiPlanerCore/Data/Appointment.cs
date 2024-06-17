@@ -1,4 +1,5 @@
 ﻿namespace StudiPlaner.Core.Data;
+
 public class Appointment(string name, DateTime start, string? description = null)
 {
     public string Name { get; set; } = name;

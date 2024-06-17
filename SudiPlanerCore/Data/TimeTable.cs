@@ -2,7 +2,7 @@
 
 namespace StudiPlaner.Core.Data;
 
-public class TimeTable(List<RunningCourse> courses)
+public class TimeTable(List<RunningCourse> courses) : IForEachAble<RunningCourse>
 {
     public List<RunningCourse> Courses { get; set; } = courses;
 
@@ -17,10 +17,12 @@ public class TimeTable(List<RunningCourse> courses)
     public void Add(RunningCourse course)
     {
         foreach (RunningCourse c in Courses)
-            foreach (TimeSlot t in c.TimeSlots)
-                foreach (TimeSlot t2 in course.TimeSlots)
+            c.ForEach(t =>
+            course.ForEach(t2 =>
+                {
                     if (t.Equals(t2))
                         throw new TimeSlotBlockedException(t2);
+                }));
         courses.Add(course);
     }
 
@@ -38,7 +40,7 @@ public class TimeTable(List<RunningCourse> courses)
                 }
     }
 
-    public FinishedCourse Finish(int index,double grade)
+    public FinishedCourse Finish(int index, double grade)
     {
         FinishedCourse res = Courses[index].Finish(grade);
         Courses.RemoveAt(index);
@@ -72,5 +74,13 @@ public class TimeTable(List<RunningCourse> courses)
             courses.ForEach(x => res.Add($"ID {i++}: {x}"));
         }
         return string.Join("\n", res);
+    }
+
+    public void ForEach(IForEachAble<RunningCourse>.Del del)
+    {
+        foreach (RunningCourse course in Courses)
+        {
+            del(course);
+        }
     }
 }
